@@ -32,6 +32,10 @@ export default function App() {
     }
   ]);
 
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
   function addContact() {
     setContacts([
       ...contacts,
@@ -40,7 +44,7 @@ export default function App() {
         company: "New Company",
         title: "Title",
         status: "Researching",
-        date: new Date().toISOString().slice(0, 10)
+        date: today()
       }
     ]);
   }
@@ -69,97 +73,76 @@ export default function App() {
   }
 
   function deleteContact(index) {
-    const updated = contacts.filter((_, i) => i !== index);
-    setContacts(updated);
+    setContacts(contacts.filter((_, i) => i !== index));
+  }
+
+  function deleteCompany(index) {
+    setCompanies(companies.filter((_, i) => i !== index));
   }
 
   function exportExcel() {
-    const data = JSON.stringify(contacts, null, 2);
+    const rows = [
+      ["Name", "Company", "Title", "Status", "Date Added"],
+      ...contacts.map((c) => [
+        c.name,
+        c.company,
+        c.title,
+        c.status,
+        c.date
+      ])
+    ];
 
-    const blob = new Blob([data], {
-      type: "application/json"
-    });
-
+    const csv = rows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
-
     a.href = url;
-    a.download = "foundation-crm.json";
-
+    a.download = "foundation-crm.csv";
     a.click();
   }
 
-  function handleScreenshotUpload(event) {
-    async function handleScreenshotUpload(event) {
-  const file = event.target.files[0];
+  async function handleScreenshotUpload(event) {
+    const file = event.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  alert("AI is analyzing screenshot...");
+    alert("AI is analyzing screenshot...");
 
-  const result = await Tesseract.recognize(
-    file,
-    "eng"
-  );
+    const result = await Tesseract.recognize(file, "eng");
+    const text = result.data.text;
 
-  const text = result.data.text;
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 2);
 
-  console.log(text);
+    const aiContact = {
+      name: lines[0] || "Unknown Name",
+      title: lines[1] || "Unknown Title",
+      company: lines[2] || "Unknown Company",
+      status: "Researching",
+      date: today()
+    };
 
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 2);
+    setContacts([...contacts, aiContact]);
 
-  const detectedName = lines[0] || "Unknown Name";
-
-  const detectedTitle =
-    lines[1] || "Unknown Title";
-
-  const detectedCompany =
-    lines[2] || "Unknown Company";
-
-  const aiContact = {
-    name: detectedName,
-    company: detectedCompany,
-    title: detectedTitle,
-    status: "Researching",
-    nextAction: "AI imported",
-    dateAdded: new Date()
-      .toISOString()
-      .slice(0, 10),
-    linkedin: ""
-  };
-
-  setContacts((prev) => [
-    ...prev,
-    aiContact
-  ]);
-
-  alert("AI contact added successfully.");
-}
+    alert("AI contact added successfully.");
   }
 
   return (
     <div className="page">
-
       <div className="topBar">
-
         <div>
           <h1>Foundation GTM Command Center</h1>
-
           <p>
-            LinkedIn outreach tracker for humanoid robotics
-            sales into auto manufacturers.
+            LinkedIn outreach tracker for humanoid robotics sales into auto
+            manufacturers.
           </p>
         </div>
 
         <div className="topButtons">
-
-          <button onClick={exportExcel}>
-            Export Excel
-          </button>
+          <button onClick={exportExcel}>Export Excel</button>
 
           <div>
             <input
@@ -178,20 +161,10 @@ export default function App() {
               AI Screenshot Upload
             </button>
           </div>
-
-          <button onClick={addContact}>
-            Add Contact
-          </button>
-
-          <button onClick={addCompany}>
-            Add Company
-          </button>
-
         </div>
       </div>
 
       <div className="statsGrid">
-
         <div className="statCard">
           <p>Accounts</p>
           <h2>{companies.length}</h2>
@@ -220,21 +193,20 @@ export default function App() {
           <h2>
             {
               contacts.filter(
-                (c) =>
-                  c.status === "Meeting Booked"
+                (c) => c.status === "Meeting Booked"
               ).length
             }
           </h2>
         </div>
-
       </div>
 
       <div className="card">
-
-        <h2>Contacts Workflow</h2>
+        <div className="sectionHeader">
+          <h2>Contacts Workflow</h2>
+          <button onClick={addContact}>Add Contact</button>
+        </div>
 
         <table>
-
           <thead>
             <tr>
               <th>Name</th>
@@ -247,20 +219,13 @@ export default function App() {
           </thead>
 
           <tbody>
-
             {contacts.map((contact, index) => (
-
               <tr key={index}>
-
                 <td>
                   <input
                     value={contact.name}
                     onChange={(e) =>
-                      updateContact(
-                        index,
-                        "name",
-                        e.target.value
-                      )
+                      updateContact(index, "name", e.target.value)
                     }
                   />
                 </td>
@@ -269,11 +234,7 @@ export default function App() {
                   <input
                     value={contact.company}
                     onChange={(e) =>
-                      updateContact(
-                        index,
-                        "company",
-                        e.target.value
-                      )
+                      updateContact(index, "company", e.target.value)
                     }
                   />
                 </td>
@@ -282,11 +243,7 @@ export default function App() {
                   <input
                     value={contact.title}
                     onChange={(e) =>
-                      updateContact(
-                        index,
-                        "title",
-                        e.target.value
-                      )
+                      updateContact(index, "title", e.target.value)
                     }
                   />
                 </td>
@@ -295,17 +252,14 @@ export default function App() {
                   <select
                     value={contact.status}
                     onChange={(e) =>
-                      updateContact(
-                        index,
-                        "status",
-                        e.target.value
-                      )
+                      updateContact(index, "status", e.target.value)
                     }
                   >
                     <option>Researching</option>
                     <option>LinkedIn Sent</option>
                     <option>Connected</option>
                     <option>Meeting Booked</option>
+                    <option>Pilot Discussion</option>
                   </select>
                 </td>
 
@@ -314,45 +268,30 @@ export default function App() {
                 <td>
                   <button
                     className="deleteBtn"
-                    onClick={() =>
-                      deleteContact(index)
-                    }
+                    onClick={() => deleteContact(index)}
                   >
                     Delete
                   </button>
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       </div>
 
       <div className="card">
-
-        <h2>Company Pipeline</h2>
+        <div className="sectionHeader">
+          <h2>Company Pipeline</h2>
+          <button onClick={addCompany}>Add Company</button>
+        </div>
 
         <div className="companyGrid">
-
           {companies.map((company, index) => (
-
-            <div
-              className="companyCard"
-              key={index}
-            >
-
+            <div className="companyCard" key={index}>
               <input
                 value={company.company}
                 onChange={(e) =>
-                  updateCompany(
-                    index,
-                    "company",
-                    e.target.value
-                  )
+                  updateCompany(index, "company", e.target.value)
                 }
               />
 
@@ -362,11 +301,7 @@ export default function App() {
               <select
                 value={company.stage}
                 onChange={(e) =>
-                  updateCompany(
-                    index,
-                    "stage",
-                    e.target.value
-                  )
+                  updateCompany(index, "stage", e.target.value)
                 }
               >
                 <option>Researching</option>
@@ -382,22 +317,23 @@ export default function App() {
               <input
                 value={company.owner}
                 onChange={(e) =>
-                  updateCompany(
-                    index,
-                    "owner",
-                    e.target.value
-                  )
+                  updateCompany(index, "owner", e.target.value)
                 }
               />
 
+              <br />
+              <br />
+
+              <button
+                className="deleteBtn"
+                onClick={() => deleteCompany(index)}
+              >
+                Delete Company
+              </button>
             </div>
-
           ))}
-
         </div>
-
       </div>
-
     </div>
   );
 }
