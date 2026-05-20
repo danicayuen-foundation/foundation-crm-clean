@@ -13,8 +13,8 @@
     "vite": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "tesseract.js": "^5.1.0",
     "lucide-react": "latest"
+    "tesseract.js": "^5.1.0",
   },
   "devDependencies": {}
 }
