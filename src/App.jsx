@@ -119,7 +119,28 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
   }
+function handleScreenshotUpload(event) {
+  const file = event.target.files[0];
 
+  if (!file) return;
+
+  const fakeAIContact = {
+    name: "AI Parsed Contact",
+    company: "Detected Company",
+    title: "Detected Title",
+    status: "Researching",
+    date: new Date().toISOString().slice(0, 10)
+  };
+
+  setContacts((prev) => [...prev, fakeAIContact]);
+
+  alert(
+    "Screenshot uploaded. AI parsing simulation complete."
+  );
+}
+  
+  
+  
   return (
     <div className="page">
       <div className="topBar">
@@ -137,9 +158,19 @@ export default function App() {
             Export Excel
           </button>
 
-          <button>
-            AI Screenshot Upload
-          </button>
+          <div>
+  <input
+    type="file"
+    id="aiUpload"
+    accept="image/*"
+    style={{ display: "none" }}
+    onChange={handleScreenshotUpload}
+  />
+
+  <button onClick={() => document.getElementById("aiUpload").click()}>
+    AI Screenshot Upload
+  </button>
+</div>
 
           <button onClick={addContact}>
             Add Contact
