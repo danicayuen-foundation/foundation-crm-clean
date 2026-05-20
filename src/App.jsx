@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Tesseract from "tesseract.js";
 
 export default function App() {
   const [contacts, setContacts] = useState([
@@ -90,23 +91,54 @@ export default function App() {
   }
 
   function handleScreenshotUpload(event) {
-    const file = event.target.files[0];
+    async function handleScreenshotUpload(event) {
+  const file = event.target.files[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    const fakeAIContact = {
-      name: "AI Parsed Contact",
-      company: "Detected Company",
-      title: "Detected Title",
-      status: "Researching",
-      date: new Date().toISOString().slice(0, 10)
-    };
+  alert("AI is analyzing screenshot...");
 
-    setContacts((prev) => [...prev, fakeAIContact]);
+  const result = await Tesseract.recognize(
+    file,
+    "eng"
+  );
 
-    alert(
-      "Screenshot uploaded. AI parsing simulation complete."
-    );
+  const text = result.data.text;
+
+  console.log(text);
+
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 2);
+
+  const detectedName = lines[0] || "Unknown Name";
+
+  const detectedTitle =
+    lines[1] || "Unknown Title";
+
+  const detectedCompany =
+    lines[2] || "Unknown Company";
+
+  const aiContact = {
+    name: detectedName,
+    company: detectedCompany,
+    title: detectedTitle,
+    status: "Researching",
+    nextAction: "AI imported",
+    dateAdded: new Date()
+      .toISOString()
+      .slice(0, 10),
+    linkedin: ""
+  };
+
+  setContacts((prev) => [
+    ...prev,
+    aiContact
+  ]);
+
+  alert("AI contact added successfully.");
+}
   }
 
   return (
